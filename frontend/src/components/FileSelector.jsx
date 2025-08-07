@@ -19,7 +19,7 @@ const FileSelector = () => {
       const res = await axios.get(
         `/api/github/files?user=${username}&repo=${repo}`
       );
-      toast.success("GitHub Details Submitted Successfully!");
+      toast.success("GitHub Detail Getting Successfully!");
       setFiles(res.data.files || []);
     } catch (err) {
       toast.error("Failed to fetch files. Check username/repo.");

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import hljs from "highlight.js";
@@ -7,64 +6,37 @@ import "../style/generatedTestCode.css";
 import { toast } from "react-toastify";
 
 const GeneratedTestCode = () => {
-  const [code, setCode] = useState("");
-  const [filename, setFilename] = useState("GeneratedTest.txt");
-  const [detectedLang, setDetectedLang] = useState("plaintext");
+  const [files, setFiles] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem("generatedCode");
+    const stored = localStorage.getItem("generatedCodeList");
     if (stored) {
-      let lang = "plaintext";
-      let codeWithoutFence = stored;
-
-      const langMatch = stored.match(/^```(\w+)\n/);
-      if (langMatch) {
-        lang = langMatch[1].toLowerCase();
-        codeWithoutFence = stored
-          .replace(/^```(\w+)\n/, "")
-          .replace(/```$/, "");
-      }
-
-      setCode(codeWithoutFence);
-      setDetectedLang(lang);
-
-      const match = codeWithoutFence.match(
-        /class\s+(\w+)|def\s+(\w+)|function\s+(\w+)/
-      );
-      if (match) {
-        const name = match[1] || match[2] || match[3];
-        if (name) {
-          let ext = "txt";
-          if (lang === "java") ext = "java";
-          else if (lang === "python") ext = "py";
-          else if (lang === "javascript") ext = "js";
-          else if (lang === "c") ext = "c";
-          else if (lang === "cpp" || lang === "c++") ext = "cpp";
-          setFilename(`${name}.${ext}`);
-        }
+      try {
+        const parsed = JSON.parse(stored);
+        setFiles(parsed);
+      } catch (err) {
+        toast.error("Failed to load generated test code.",err);
       }
     }
   }, []);
 
   useEffect(() => {
-    if (code) {
-      document.querySelectorAll("pre code").forEach((block) => {
-        hljs.highlightElement(block);
-      });
+    if (files.length > 0) {
+      hljs.highlightAll();
     }
-  }, [code, detectedLang]);
+  }, [files]);
 
-  const handleCopy = async () => {
+  const handleCopy = async (code, filename) => {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("Code copied to clipboard!");
+      toast.success(`Code from ${filename} copied to clipboard!`);
     } catch (err) {
-      toast.error("Failed to copy code.", err);
+      toast.error(`Failed to copy ${filename}.`,err);
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = (code, filename) => {
     const blob = new Blob([code], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -78,16 +50,30 @@ const GeneratedTestCode = () => {
     <div className="generated-code-container">
       <h2 className="generated-code-header">Generated Test Case Code</h2>
 
-      <div className="code-action-buttons">
-        <button onClick={handleCopy}>Copy Code</button>
-        <button onClick={handleDownload}>Download as {filename}</button>
-      </div>
+      {files.length === 0 ? (
+        <p className="no-code-message">No generated code available.</p>
+      ) : (
+        files.map((file, index) => (
+          <div key={index} className="generated-file-block">
+            <h3 className="generated-file-title">{file.filename}</h3>
 
-      <pre className="hljs">
-        <code className={`language-${detectedLang}`}>
-          {code || "// No code available."}
-        </code>
-      </pre>
+            <div className="code-action-buttons">
+              <button onClick={() => handleCopy(file.code, file.filename)}>
+                Copy Code
+              </button>
+              <button onClick={() => handleDownload(file.code, file.filename)}>
+                Download as {file.filename}
+              </button>
+            </div>
+
+            <pre className="hljs">
+              <code className={`language-${file.language}`}>
+                {file.code || "// No code available."}
+              </code>
+            </pre>
+          </div>
+        ))
+      )}
 
       <div className="nav-buttons">
         <button

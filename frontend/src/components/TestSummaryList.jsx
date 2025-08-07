@@ -26,12 +26,14 @@ const TestSummaryList = () => {
     if (summaries.length === 0) return;
     try {
       setLoading(true);
-      const fullText = summaries.join("\n\n");
+
       const response = await axios.post("/api/ai/generate-code", {
-        summary: fullText,
+        summaries,
       });
-      const code = response.data.code;
-      localStorage.setItem("generatedCode", code);
+      const files = response.data.files;
+      localStorage.setItem("generatedCodeList", JSON.stringify(files));
+
+
       toast.success("Code Generated Successfully!");
       navigate("/generated-code");
     } catch (err) {

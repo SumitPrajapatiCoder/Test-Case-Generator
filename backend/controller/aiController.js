@@ -48,29 +48,55 @@ Generated Test Code:
     }
 };
 
-const generateCode = async (req, res) => {
-    const { summary } = req.body;
 
-    if (!summary) {
-        return res.status(400).json({ error: "Summary not provided." });
+const generateCode = async (req, res) => {
+    const { summaries } = req.body;
+
+    if (!Array.isArray(summaries) || summaries.length === 0) {
+        return res.status(400).json({ error: "Summaries not provided." });
     }
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `You are a professional automation engineer. Given this summary, generate suitable test code:
+        const results = [];
+        for (const summary of summaries) {
+            const prompt = `You are a professional automation engineer. Given this summary, generate suitable test code:
 
 ${summary}
 
 Respond with only one code block, including language label.`;
 
-        const result = await model.generateContent(prompt);
-        const code = result.response.text();
-        res.json({ code });
+            const result = await model.generateContent(prompt);
+            const responseText = result.response.text();
+
+            const match = responseText.match(/```(\w+)?\n([\s\S]*?)```/);
+            const language = match?.[1]?.toLowerCase() || "plaintext";
+            const code = match?.[2] || "// No code generated.";
+
+            const filenameMatch = summary.match(/Filename:\s*(.+)/);
+            const rawFilename = filenameMatch?.[1]?.trim() || "GeneratedTest";
+            const filename = rawFilename.replace(/\s+/g, "").replace(/\.\w+$/, ""); 
+            let ext = "txt";
+            if (language === "java") ext = "java";
+            else if (language === "python") ext = "py";
+            else if (language === "javascript") ext = "js";
+            else if (language === "c") ext = "c";
+            else if (language === "cpp" || language === "c++") ext = "cpp";
+
+            results.push({
+                filename: `${filename}Test.${ext}`,
+                language,
+                code,
+            });
+        }
+
+        res.json({ files: results });
     } catch (err) {
         console.error("Code generation error:", err);
         res.status(500).json({ error: "Code generation failed." });
     }
 };
+
 
 module.exports = { generateSummary, generateCode };
