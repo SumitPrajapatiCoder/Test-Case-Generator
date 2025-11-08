@@ -11,7 +11,7 @@ const generateSummary = async (req, res) => {
             return res.status(400).json({ error: "No files provided." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
         const promptPrefix = `You are an expert software test engineer. For each file below:
 1. Identify the programming language.
@@ -57,7 +57,7 @@ const generateCode = async (req, res) => {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
         const results = [];
         for (const summary of summaries) {

@@ -62,7 +62,6 @@ const FileSelector = () => {
       files: filesWithContent,
     });
 
-    // ✅ Save parsed summary array
     localStorage.setItem("summaries", JSON.stringify(res.data.summaries));
     navigate("/summaries");
   } catch (err) {
