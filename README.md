@@ -150,7 +150,5 @@ This project provides an automated solution for analyzing code and generating te
 ```
 
 ## 📸 Screenshots
-
-(Add screenshots of the application here to showcase its features and UI)
 <img width="668" height="547" alt="image" src="https://github.com/user-attachments/assets/b59726bd-b75f-40e8-a912-961b352762a5" />
 
